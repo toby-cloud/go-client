@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	message "toby-cloud/go-client/message"
+	message "github.com/toby-cloud/toby-go/message"
 )
 
 func main() {

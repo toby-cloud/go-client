@@ -6,7 +6,7 @@ import (
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	message "toby-cloud/go-client/message"
+	message "github.com/toby-cloud/toby-go/message"
 )
 
 // MessageHandler

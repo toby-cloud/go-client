@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	bot "toby-cloud/go-client/bot"
-	message "toby-cloud/go-client/message"
+	bot "github.com/toby-cloud/toby-go/bot"
+	message "github.com/toby-cloud/toby-go/message"
 )
 
 func main() {
