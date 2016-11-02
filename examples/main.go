@@ -1,10 +1,11 @@
 package main
 
 import (
-	"./toby/bot"
-	"./toby/message"
 	"fmt"
 	"time"
+
+	bot "toby-cloud/go-client/bot"
+	message "toby-cloud/go-client/message"
 )
 
 func main() {
@@ -30,12 +31,11 @@ func main() {
 		} else {
 			fmt.Println("Acknowledgment requested: " + msg.AckTag)
 			tags := []string{msg.AckTag}
-			m := message.NewMessage("I received your message " + msg.Message + " in golang", "TEXT", tags, "test")
+			m := message.NewMessage("I received your message "+msg.Message+" in golang", "TEXT", tags, "test")
 			b.Send(*m)
 		}
 	})
 
 	b.Start()
-
 
 }

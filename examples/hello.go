@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./toby/message"
 	"fmt"
-)
 
+	message "toby-cloud/go-client/message"
+)
 
 func main() {
 

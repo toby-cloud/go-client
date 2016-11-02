@@ -1,11 +1,12 @@
 package bot
 
 import (
-	"fmt"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"time"
 	"encoding/json"
-	"../message"
+	"fmt"
+	"time"
+
+	MQTT "github.com/eclipse/paho.mqtt.golang"
+	message "toby-cloud/go-client/message"
 )
 
 // MessageHandler
