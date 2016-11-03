@@ -12,9 +12,21 @@ import (
 ```
 
 Then do `go get` to install the Toby package.
-See usage in the `examples` folder.
+
+
+## Usage
+
+See the `examples` folder.
+
+
+## Testing
+
+Use `go test` to run unit tests. The MQTT connection is mocked.
 
 
 ### TODO:
-* update functionality to node client
-* add testing
+
+* Add unit testing to `message.go`
+* Add unit testing to `hashtag.go`
+* `utils/hashtag.go` is unused
+* Update examples
