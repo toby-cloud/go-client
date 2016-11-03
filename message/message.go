@@ -24,6 +24,7 @@ func NewMessage(message, messageType string, tags []string, ackTag string) *Mess
 }
 
 func (m *Message) String() string {
+	// TODO: don't suppress error
 	jsonString, _ := json.Marshal(m)
 	return string(jsonString)
 }
