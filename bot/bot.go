@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -11,7 +12,7 @@ import (
 )
 
 // MessageHandler
-type OnMessageHandler func(message.Message)
+type OnMessageHandler func(string, message.Message)
 
 // ConnectionLostHandler
 type OnDisconnectHandler func()
@@ -333,14 +334,16 @@ func (b *Bot) SetOnDisconnectHandler(handler OnDisconnectHandler) *Bot {
 
 // onMessage processes the received MQTT message then calls OnMessage handler
 func (b *Bot) onMessage(client MQTT.Client, msg MQTT.Message) {
-	// TODO: preprocess message into Toby Message
-	// t := msg.Topic().split("/").splice(2).join("/"), JSON.parse(message.toString())
+	// preprocess message topics
+	topics := strings.Split(msg.Topic(), "/")
+	topics = topics[2:]
+	t := strings.Join(topics, "/")
 
-	// TODO: we can't really do error handling in here
-	var m message.Message
+	// TODO: some error handling in here
+	m := message.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
-		return
+		t = ""
 	}
 
-	b.OnMessage(m)
+	b.OnMessage(t, m)
 }
