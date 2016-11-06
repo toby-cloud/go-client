@@ -88,12 +88,15 @@ func (b *Bot) End() error {
 }
 
 // Send sends a message with one tag
-func (b *Bot) Send(m message.Message) error {
-	// TODO: throw error if invalid message
+func (b *Bot) Send(m message) error {
+	msg, err := m.String()
+	if err != nil {
+		return err
+	}
 
-	token := b.MqttClient.Publish("server/"+b.BotID+"/send", byte(0), false, m.String())
+	token := b.MqttClient.Publish("server/"+b.BotID+"/send", byte(0), false, msg)
 	token.Wait()
-	fmt.Println("Sent message: " + m.String())
+	fmt.Println("Sent message: " + msg)
 
 	return nil
 }

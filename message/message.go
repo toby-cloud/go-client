@@ -23,8 +23,10 @@ func NewMessage(message, messageType string, tags []string, ackTag string) *Mess
 	return o
 }
 
-func (m *Message) String() string {
-	// TODO: don't suppress error
-	jsonString, _ := json.Marshal(m)
-	return string(jsonString)
+func (m *Message) String() (string, error) {
+	jsonString, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonString), nil
 }
