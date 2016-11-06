@@ -88,7 +88,7 @@ func (b *Bot) End() error {
 }
 
 // Send sends a message with one tag
-func (b *Bot) Send(m message) error {
+func (b *Bot) Send(m message.Message) error {
 	msg, err := m.String()
 	if err != nil {
 		return err
