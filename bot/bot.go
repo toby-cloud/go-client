@@ -345,8 +345,15 @@ func (b *Bot) onMessage(client MQTT.Client, msg MQTT.Message) {
 	// TODO: some error handling in here
 	m := message.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
-		t = ""
+		// shouldn't ignore this, but need uniform Messages from toby
 	}
+
+	// TODO: uniform Message structure needed to handle bot credentials
+	tmpMessage := map[string]interface{}{}
+	if err := json.Unmarshal(msg.Payload(), &tmpMessage); err != nil {
+		t = "2"
+	}
+	m.Message = fmt.Sprintf("%#v", tmpMessage["message"])
 
 	b.OnMessage(t, m)
 }

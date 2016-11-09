@@ -7,10 +7,10 @@ import (
 )
 
 type Message struct {
-	Message     string   `json:"message"`
-	MessageType string   `json:"messageType"`
-	Tags        []string `json:"tags"`
-	AckTag      string   `json:"ackTag"`
+	Message     string   `json: "message"`
+	MessageType string   `json: "messageType"`
+	Tags        []string `json: "tags"`
+	AckTag      string   `json: "ackTag"`
 }
 
 func NewMessage(message, messageType string, tags []string, ackTag string) *Message {
