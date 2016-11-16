@@ -16,5 +16,5 @@ func RemoveHashtags(text string) string {
 func FindHashtags(text string) []string {
 	// TODO: confirm this and don't suppress errors
 	r, _ := regexp.Compile(`/(\s|^)\#\w\w+\b/gm`)
-	return r.FindAllString(text)
+	return r.FindAllString(text, -1)
 }

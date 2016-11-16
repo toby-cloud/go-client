@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"strconv"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -12,7 +12,7 @@ import (
 )
 
 // MessageHandler
-type OnMessageHandler func(string, message.Message)
+type OnMessageHandler func(message.Message)
 
 // ConnectionLostHandler
 type OnDisconnectHandler func()
@@ -31,7 +31,7 @@ type Bot struct {
 	MqttClient    MQTT.Client
 }
 
-// NewBot constructs a new Bot
+// NewBot constructs a new Bot.
 func NewBot() *Bot {
 	return &Bot{
 		ClientID:      "",
@@ -45,7 +45,7 @@ func NewBot() *Bot {
 	}
 }
 
-// Start starts the Toby MQTT connection
+// Start starts the Toby MQTT connection.
 func (b *Bot) Start() error {
 	// if connection successful, subscribe to bot data
 
@@ -69,25 +69,24 @@ func (b *Bot) Start() error {
 	b.OnConnect()
 
 	// subscribe to bot data and call onMessage when messages are received
-	if token := b.MqttClient.Subscribe("client/"+b.BotID+"/#", byte(0), b.onMessage); token.Wait() && token.Error() != nil {
+	if token := b.MqttClient.Subscribe("client/"+b.BotID, byte(0), b.onMessage); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
 
 	return nil
 }
 
-// End ends the Toby MQTT connection
-func (b *Bot) End() error {
+// Stop ends the Toby MQTT connection.
+func (b *Bot) Stop() error {
 	// TODO: throw error if OnDisconnect() throws an error
 	b.OnDisconnect()
 
-	b.MqttClient.Unsubscribe("#")
 	b.MqttClient.Disconnect(250)
 
 	return nil
 }
 
-// Send sends a message with one tag
+// Send sends a message with one tag.
 func (b *Bot) Send(m message.Message) error {
 	msg, err := m.String()
 	if err != nil {
@@ -101,15 +100,15 @@ func (b *Bot) Send(m message.Message) error {
 	return nil
 }
 
-// HooksOn turns on webhooks
-func (b *Bot) HooksOn(hookSecret, ackTag string) error {
+// HooksOn turns on webhooks.
+func (b *Bot) HooksOn(sk, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
 	}
 
 	// json the hookSecret and ackTag
-	m, err := json.Marshal(map[string]string{"hookSecret": hookSecret, "ackTag": ackTag})
+	m, err := json.Marshal(map[string]string{"sk": sk, "ack": ack})
 	if err != nil {
 		return err
 	}
@@ -121,15 +120,15 @@ func (b *Bot) HooksOn(hookSecret, ackTag string) error {
 	return nil
 }
 
-// HooksOff turns off webhooks
-func (b *Bot) HooksOff(ackTag string) error {
+// HooksOff turns off webhooks.
+func (b *Bot) HooksOff(ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
 	}
 
 	// json the ackTag
-	m, err := json.Marshal(map[string]string{"ackTag": ackTag})
+	m, err := json.Marshal(map[string]string{"ack": ack})
 	if err != nil {
 		return err
 	}
@@ -141,15 +140,15 @@ func (b *Bot) HooksOff(ackTag string) error {
 	return nil
 }
 
-// Info gets the bot info from MQTT
-func (b *Bot) Info(ackTag string) error {
+// Info gets the bot info from MQTT.
+func (b *Bot) Info(ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
 	}
 
 	// json the ackTag
-	m, err := json.Marshal(map[string]string{"ackTag": ackTag})
+	m, err := json.Marshal(map[string]string{"ack": ack})
 	if err != nil {
 		return err
 	}
@@ -161,8 +160,8 @@ func (b *Bot) Info(ackTag string) error {
 	return nil
 }
 
-// CreateBot creates the bot in MQTT
-func (b *Bot) CreateBot(name, password, ackTag string) error {
+// CreateBot creates the bot in MQTT.
+func (b *Bot) CreateBot(name, password, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -170,9 +169,9 @@ func (b *Bot) CreateBot(name, password, ackTag string) error {
 
 	// construct payload
 	payload := map[string]string{
-		"id":     name,
-		"secret": password,
-		"ackTag": ackTag,
+		"id":  name,
+		"sk":  password,
+		"ack": ack,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -186,8 +185,8 @@ func (b *Bot) CreateBot(name, password, ackTag string) error {
 	return nil
 }
 
-// CreateSocket creates the socket
-func (b *Bot) CreateSocket(persist bool, ackTag string) error {
+// CreateSocket creates the socket.
+func (b *Bot) CreateSocket(persist bool, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -195,8 +194,8 @@ func (b *Bot) CreateSocket(persist bool, ackTag string) error {
 
 	// construct payload
 	payload := map[string]interface{}{
-		"ackTag":  ackTag,
-		"persist": persist,
+		"ack":     ack,
+		"persist": strconv.FormatBool(persist),
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -210,8 +209,8 @@ func (b *Bot) CreateSocket(persist bool, ackTag string) error {
 	return nil
 }
 
-// RemoveBot removes the bot
-func (b *Bot) RemoveBot(targetId, ackTag string) error {
+// RemoveBot removes the bot.
+func (b *Bot) RemoveBot(targetId, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -219,8 +218,8 @@ func (b *Bot) RemoveBot(targetId, ackTag string) error {
 
 	// construct payload
 	payload := map[string]string{
-		"ackTag": ackTag,
-		"botId":  targetId,
+		"ack": ack,
+		"id":  targetId,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -234,8 +233,8 @@ func (b *Bot) RemoveBot(targetId, ackTag string) error {
 	return nil
 }
 
-// RemoveSocket removes the socket
-func (b *Bot) RemoveSocket(targetId, ackTag string) error {
+// RemoveSocket removes the socket.
+func (b *Bot) RemoveSocket(targetId, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -243,8 +242,8 @@ func (b *Bot) RemoveSocket(targetId, ackTag string) error {
 
 	// construct payload
 	payload := map[string]string{
-		"ackTag": ackTag,
-		"botId":  targetId,
+		"ack": ack,
+		"id":  targetId,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -258,8 +257,8 @@ func (b *Bot) RemoveSocket(targetId, ackTag string) error {
 	return nil
 }
 
-// Follow adds bot subscription to tag
-func (b *Bot) Follow(tag, ackTag string) error {
+// Follow adds bot subscription to tag.
+func (b *Bot) Follow(tags, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -267,8 +266,8 @@ func (b *Bot) Follow(tag, ackTag string) error {
 
 	// construct payload
 	payload := map[string]string{
-		"tags":   tag,
-		"ackTag": ackTag,
+		"tags": tags,
+		"ack":  ack,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -278,13 +277,12 @@ func (b *Bot) Follow(tag, ackTag string) error {
 	// publish to MqttClient
 	token := b.MqttClient.Publish("server/"+b.BotID+"/follow", byte(0), false, string(m))
 	token.Wait()
-	fmt.Println("Followed #" + tag)
 
 	return nil
 }
 
-// Unfollow removes bot subscription to tag
-func (b *Bot) Unfollow(tag, ackTag string) error {
+// Unfollow removes bot subscription to tag.
+func (b *Bot) Unfollow(tags, ack string) error {
 	// return error if MqttClient is not connected
 	if !b.MqttClient.IsConnected() {
 		return errors.New("MQTTClient not connected")
@@ -292,8 +290,8 @@ func (b *Bot) Unfollow(tag, ackTag string) error {
 
 	// construct payload
 	payload := map[string]string{
-		"tags":   tag,
-		"ackTag": ackTag,
+		"tags": tags,
+		"ack":  ack,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
@@ -303,7 +301,6 @@ func (b *Bot) Unfollow(tag, ackTag string) error {
 	// publish to MqttClient
 	token := b.MqttClient.Publish("server/"+b.BotID+"/unfollow", byte(0), false, string(m))
 	token.Wait()
-	fmt.Println("Followed #" + tag)
 
 	return nil
 }
@@ -320,40 +317,25 @@ func (b *Bot) SetSecret(s string) {
 	b.Secret = s
 }
 
-func (b *Bot) SetOnMessageHandler(handler OnMessageHandler) *Bot {
+func (b *Bot) SetOnMessageHandler(handler OnMessageHandler) {
 	b.OnMessage = handler
-	return b
 }
 
-func (b *Bot) SetOnConnectHandler(handler OnConnectHandler) *Bot {
+func (b *Bot) SetOnConnectHandler(handler OnConnectHandler) {
 	b.OnConnect = handler
-	return b
 }
 
-func (b *Bot) SetOnDisconnectHandler(handler OnDisconnectHandler) *Bot {
+func (b *Bot) SetOnDisconnectHandler(handler OnDisconnectHandler) {
 	b.OnDisconnect = handler
-	return b
 }
 
 // onMessage processes the received MQTT message then calls OnMessage handler
 func (b *Bot) onMessage(client MQTT.Client, msg MQTT.Message) {
-	// preprocess message topics
-	topics := strings.Split(msg.Topic(), "/")
-	topics = topics[2:]
-	t := strings.Join(topics, "/")
 
-	// TODO: some error handling in here
 	m := message.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
-		// shouldn't ignore this, but need uniform Messages from toby
+		// TODO: handle error unmarshaling
 	}
 
-	// TODO: uniform Message structure needed to handle bot credentials
-	tmpMessage := map[string]interface{}{}
-	if err := json.Unmarshal(msg.Payload(), &tmpMessage); err != nil {
-		t = "2"
-	}
-	m.Message = fmt.Sprintf("%#v", tmpMessage["message"])
-
-	b.OnMessage(t, m)
+	b.OnMessage(m)
 }

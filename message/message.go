@@ -7,23 +7,26 @@ import (
 )
 
 type Message struct {
-	Message     string   `json: "message"`
-	MessageType string   `json: "messageType"`
-	Tags        []string `json: "tags"`
-	AckTag      string   `json: "ackTag"`
+	From    string            `json: "from,omitempty"`
+	Payload map[string]string `json: "payload"`
+	Tags    []string          `json: "tags"`
+	Ack     string            `json: "ack"`
 }
 
-func NewMessage(message, messageType string, tags []string, ackTag string) *Message {
-	o := &Message{
-		Message:     message,
-		MessageType: messageType,
-		Tags:        tags,
-		AckTag:      ackTag,
+func NewMessage(from string, payload map[string]string, tags []string, ack string) *Message {
+	m := &Message{
+		From:    from,
+		Payload: payload,
+		Tags:    tags,
+		Ack:     ack,
 	}
-	return o
+	return m
 }
 
 func (m *Message) String() (string, error) {
+	// omit the from field
+	m.From = ""
+
 	jsonString, err := json.Marshal(m)
 	if err != nil {
 		return "", err
