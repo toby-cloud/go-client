@@ -46,7 +46,7 @@ func NewBot() *Bot {
 }
 
 // Start starts the Toby MQTT connection.
-func (b *Bot) Start() error {
+func (b *Bot) Start() {
 	// if connection successful, subscribe to bot data
 
 	// set MQTT options
@@ -63,17 +63,16 @@ func (b *Bot) Start() error {
 
 	// connect to mqtt broker
 	if token := b.MqttClient.Connect(); token.Wait() && token.Error() != nil {
-		return token.Error()
+		panic(token.Error())
 	}
-	// execute onConnect callback when connected successfully
-	b.OnConnect()
 
 	// subscribe to bot data and call onMessage when messages are received
 	if token := b.MqttClient.Subscribe("client/"+b.BotID, byte(0), b.onMessage); token.Wait() && token.Error() != nil {
-		return token.Error()
+		panic(token.Error())
 	}
 
-	return nil
+	// execute onConnect callback when connected successfully
+	b.OnConnect()
 }
 
 // Stop ends the Toby MQTT connection.
