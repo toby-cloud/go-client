@@ -7,7 +7,7 @@ import (
 )
 
 type Message struct {
-	From    string            `json:"-"`
+	From    string            `json:"from,omitempty"`
 	Payload map[string]string `json:"payload"`
 	Tags    []string          `json:"tags"`
 	Ack     string            `json:"ack"`
@@ -34,6 +34,7 @@ func (m *Message) String() (string, error) {
 		m.Tags = []string{}
 	}
 	// omit the from field
+	m.From = ""
 
 	jsonString, err := json.Marshal(m)
 	if err != nil {
