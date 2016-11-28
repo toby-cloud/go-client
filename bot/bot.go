@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
+	// "strconv"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -29,6 +29,11 @@ type Bot struct {
 	OnDisconnect  OnDisconnectHandler
 	OnMessage     OnMessageHandler
 	MqttClient    MQTT.Client
+}
+
+type Response struct {
+	Id string `json:"id"`
+	Sk string `json:"sk"`
 }
 
 // NewBot constructs a new Bot.
@@ -73,16 +78,13 @@ func (b *Bot) Start() {
 
 	// execute onConnect callback when connected successfully
 	b.OnConnect()
+
 }
 
 // Stop ends the Toby MQTT connection.
-func (b *Bot) Stop() error {
-	// TODO: throw error if OnDisconnect() throws an error
+func (b *Bot) Stop() {
 	b.OnDisconnect()
-
 	b.MqttClient.Disconnect(250)
-
-	return nil
 }
 
 // Send sends a message with one tag.
@@ -139,6 +141,7 @@ func (b *Bot) HooksOff(ack string) error {
 	return nil
 }
 
+// FIXME: handle info requests not using map[string]string
 // Info gets the bot info from MQTT.
 func (b *Bot) Info(ack string) error {
 	// return error if MqttClient is not connected
@@ -194,13 +197,14 @@ func (b *Bot) CreateSocket(persist bool, ack string) error {
 	// construct payload
 	payload := map[string]interface{}{
 		"ack":     ack,
-		"persist": strconv.FormatBool(persist),
+		"persist": persist,
 	}
 	m, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("creating socket", string(m))
 	// publish to MqttClient
 	token := b.MqttClient.Publish("server/"+b.BotID+"/create-socket", byte(0), false, string(m))
 	token.Wait()
@@ -333,7 +337,15 @@ func (b *Bot) onMessage(client MQTT.Client, msg MQTT.Message) {
 
 	m := message.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
+		// try unmarshaling as creds response
+		r := Response{}
+		if err = json.Unmarshal(msg.Payload(), &r); err != nil {
+			b.Stop()
+		}
+		m.Id = r.Id
+		m.Sk = r.Sk
 		// TODO: handle error unmarshaling
+		// b.Stop()
 	}
 
 	b.OnMessage(m)
