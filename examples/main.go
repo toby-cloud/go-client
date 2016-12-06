@@ -16,10 +16,10 @@ func main() {
 
 	b.SetOnConnectHandler(func() {
 		fmt.Println("Connected to toby!")
-		m := message.Message{
-			From: "tiff",
-		}
-		b.Send(m)
+		// m := message.Message{
+		// From: "tiff",
+		// }
+		// b.Send(m)
 		// b.Follow("go")
 	})
 
@@ -41,7 +41,7 @@ func main() {
 
 	b.Start()
 
-	b.CreateSocket(false, "ack")
+	// b.CreateSocket(false, "ack")
 
 	for {
 		/*		if !b.MqttClient.IsConnected() {

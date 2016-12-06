@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	// "strconv"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -31,9 +30,12 @@ type Bot struct {
 	MqttClient    MQTT.Client
 }
 
-type Response struct {
-	Id string `json:"id"`
-	Sk string `json:"sk"`
+type CredsResponse struct {
+	Id   string   `json:"id"`
+	Sk   string   `json:"sk"`
+	Tags []string `json:"tags"`
+	From string   `json:"from"`
+	Ack  string   `json:"ack"`
 }
 
 // NewBot constructs a new Bot.
@@ -338,14 +340,18 @@ func (b *Bot) onMessage(client MQTT.Client, msg MQTT.Message) {
 	m := message.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
 		// try unmarshaling as creds response
-		r := Response{}
+		r := CredsResponse{}
 		if err = json.Unmarshal(msg.Payload(), &r); err != nil {
 			b.Stop()
+			fmt.Println("Error unmarshaling message - disconnecting...")
+			return
 		}
 		m.Id = r.Id
 		m.Sk = r.Sk
+		m.Tags = r.Tags
+		m.Ack = r.Ack
+		m.From = r.From
 		// TODO: handle error unmarshaling
-		// b.Stop()
 	}
 
 	b.OnMessage(m)
